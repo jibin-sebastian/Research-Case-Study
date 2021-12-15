@@ -1,0 +1,272 @@
+# Smartphone Data
+
+#' The smartphone data is the only data that divides the data in the 
+#' one minute task and the six minute task, therefore this should be the 
+#' starting point to find the potential time stamp that we need to use
+#' The distance of one data point to another is approx. 1 second.
+
+
+library(tidyverse)
+library(stringr)
+
+smartphone_sct <- "C:/Users/lukas/OneDrive/Desktop/Daten Research project/smartphones_new/smartphones/sct/"
+
+
+
+smartphone_eins <- read.csv(paste0(smartphone_sct,"1d5d73b7.csv"), sep = ";")
+
+# Filter data to the rows of interest
+
+smartphone_eins <- smartphone_eins%>%filter(type_profile == "basic" & type_category == "acceleration")
+
+options(digits.secs = 6)
+date_and_time <- data.frame(str_sub(smartphone_eins$time, end=-4))
+
+miliseconds <- as.numeric(str_sub(smartphone_eins$time, -3,-1))/1000
+
+
+as.POSIXct(as.numeric(smartphone_eins$time), origin="1970-01-01", tz = "UTC")
+
+
+time <- as.POSIXct(as.numeric(date_and_time$str_sub.smartphone_eins.time..end....4.), origin="1970-01-01", tz = "UTC")
+time <- time + miliseconds
+
+
+data_of_interest <- data.frame(time,smartphone_eins$value)
+
+
+
+library(ggplot2)
+library(plotly)
+
+p <- ggplot(data = data_of_interest, aes(x = time, y = smartphone_eins.value))+geom_point()+geom_hline(yintercept = mean(data_of_interest$smartphone_eins.value))+theme_bw()
+ggplotly(p)
+
+which(data_of_interest$smartphone_eins.value > mean(data_of_interest$smartphone_eins.value))
+
+data_of_interest[which(data_of_interest$smartphone_eins.value > mean(data_of_interest$smartphone_eins.value)),]
+
+# Find 60 data points where the distance is minimal 
+
+frame_to_iterate <- which(data_of_interest$smartphone_eins.value > mean(data_of_interest$smartphone_eins.value))
+
+start <- list()
+end  <- list()
+Result <- list()
+
+for(i in frame_to_iterate){
+  
+  
+  start[[i]] <- i
+  end[[i]] <- i+59
+  Result[[i]] <-sum(data_of_interest[i:(59+i),2]>mean(data_of_interest$smartphone_eins.value))
+  
+}
+start <- do.call(rbind.data.frame, start)
+end <- do.call(rbind.data.frame, end)
+Result <- do.call(rbind.data.frame, Result)
+
+intermediate_Result <- cbind(start,  end,Result)
+
+colnames(intermediate_Result) <- c("start", 
+                                   "end", 
+                                   "Result")
+
+
+
+
+
+
+Maximum <- max(intermediate_Result$Result, na.rm = T)
+helper <- na.omit(intermediate_Result[intermediate_Result$Result == Maximum, ])
+
+
+iter_for_sct <- helper[ceiling(dim(helper)[1]/2),1]
+
+Final_data_sct <- data_of_interest[iter_for_sct:(iter_for_sct+59),]
+
+
+
+
+
+
+
+
+
+
+
+
+#' Now we use the same procedure to get the result for the 6mwt
+#' 
+
+
+smartphone_6mwt <- "C:/Users/lukas/OneDrive/Desktop/Daten Research project/smartphones_new/smartphones/6mwt/"
+smartphone_6 <- read.csv(paste0(smartphone_6mwt,"1d5d73b7.csv"), sep = ";")
+
+
+
+
+
+# Filter data to the rows of interest
+
+smartphone_6 <- smartphone_6%>%filter(type_profile == "basic" & type_category == "acceleration")
+
+options(digits.secs = 6)
+date_and_time <- data.frame(str_sub(smartphone_6$time, end=-4))
+
+miliseconds <- as.numeric(str_sub(smartphone_6$time, -3,-1))/1000
+
+time <- as.POSIXct(as.numeric(date_and_time$str_sub.smartphone_6.time..end....4.), origin="1970-01-01", tz = "UTC")
+time <- time + miliseconds
+
+data_of_interest <- data.frame(time,smartphone_6$value)
+
+
+p <- ggplot(data = data_of_interest, aes(x = time, y = smartphone_6.value))+geom_point()+geom_hline(yintercept = mean(data_of_interest$smartphone_6.value))+theme_bw()
+ggplotly(p)
+
+
+
+which(data_of_interest$smartphone_6.value > mean(data_of_interest$smartphone_6.value))
+
+data_of_interest[which(data_of_interest$smartphone_6.value > mean(data_of_interest$smartphone_6.value)),]
+
+
+
+# Find 360 data points where the distance is minimal 
+
+
+frame_to_iterate <- which(data_of_interest$smartphone_6.value > mean(data_of_interest$smartphone_6.value))
+
+start <- list()
+end  <- list()
+Result <- list()
+
+for(i in frame_to_iterate){
+  
+  
+  start[[i]] <- i
+  end[[i]] <- i+359
+  Result[[i]] <-sum(data_of_interest[i:(359+i),2]>mean(data_of_interest$smartphone_6.value))
+  
+}
+start <- do.call(rbind.data.frame, start)
+end <- do.call(rbind.data.frame, end)
+Result <- do.call(rbind.data.frame, Result)
+
+intermediate_Result <- cbind(start,  end,Result)
+
+colnames(intermediate_Result) <- c("start", 
+                                   "end", 
+                                   "Result")
+
+
+
+
+
+
+Maximum <- max(intermediate_Result$Result, na.rm = T)
+helper <- na.omit(intermediate_Result[intermediate_Result$Result == Maximum, ])
+
+
+iter_for_6mwt <- helper[ceiling(dim(helper)[1]/2),1]
+
+Final_data_6mwt <- data_of_interest[iter_for_6mwt:(iter_for_6mwt+359),]
+
+
+
+
+
+#' Fitbit data 
+
+fitbit <- "C:/Users/lukas/OneDrive/Desktop/Daten Research project/fitbit/fitbit/"
+
+
+fitbit_data <- read.csv(paste0(fitbit, "1d5d73b7.csv"), sep = ";")
+
+
+
+fitbit_data$dateTime <- as.POSIXct(as.character(fitbit_data$dateTime), format="%m/%d/%y %H:%M:%S", tz = "UTC")
+
+p <- ggplot(data = fitbit_data, aes(x = dateTime, y = bpm, color = confidence))+geom_point()+theme_bw()
+
+ggplotly(p)
+
+
+
+
+fitbit_6mwt <- fitbit_data[fitbit_data$dateTime >= Final_data_6mwt[1,1] & fitbit_data$dateTime <= Final_data_6mwt[360,1],]
+
+
+for(i in seq(0,5, by =0.1)){
+  if(as.numeric(difftime(fitbit_6mwt[dim(fitbit_6mwt)[1],1],fitbit_6mwt[1,1])) < 6){
+    fitbit_6mwt <- fitbit_data[fitbit_data$dateTime >= (Final_data_6mwt[1,1]-i) & fitbit_data$dateTime <= (Final_data_6mwt[360,1]+i),]
+    
+  }else{
+    break
+  }
+}
+
+
+
+fitbit_sct <- fitbit_data[fitbit_data$dateTime >= Final_data_sct[1,1] & fitbit_data$dateTime <= Final_data_sct[60,1],]
+
+
+for(i in seq(0,5, by =0.1)){
+  if(as.numeric(difftime(fitbit_sct[dim(fitbit_sct)[1],1],fitbit_sct[1,1], units = "mins")) < 1){
+    fitbit_sct <- fitbit_data[fitbit_data$dateTime >= (Final_data_sct[1,1]-i) & fitbit_data$dateTime <= (Final_data_sct[60,1]+i),]
+    
+  }else{
+    break
+  }
+}
+
+
+
+# Accelerometer
+
+path_to_accelerometer <- "C:/Users/lukas/OneDrive/Desktop/Daten Research project/accelerometer/accelerometer/"
+
+library(XML)
+library(methods)
+xmlfile <- xmlParse(file = paste0(path_to_accelerometer,"1d5d73b7/","unisens.xml"))
+
+
+rootnode <- xmlRoot(xmlfile)
+helperlist <- xmlToList(rootnode)
+
+
+starting_point <- as.POSIXct(gsub("T", " ", helperlist$.attrs[[4]]))
+#Subtract the two hours from the CEST format to get to UTC
+starting_point <- starting_point -7200
+
+
+starting_point <- as.POSIXct(as.character(starting_point), tz = "UTC")
+
+# The data get 
+
+
+# Because in our data every 64 rows equal one sec, we will summarize them 
+# to seconds.
+
+
+acc <- read.csv(paste0(path_to_accelerometer, "1d5d73b7/acc.csv"),header = F, sep = ";")
+
+N <- 64        
+
+aggregated_acc_data <- aggregate(acc, list(rep(1:(nrow(acc) %/% N + 1), each = N, len = nrow(acc))), mean)[-1]
+
+# Include timestamp 
+
+time <- seq(starting_point, (starting_point + (dim(aggregated_acc_data)[1])-1), by = 1)
+
+acc_with_time <- cbind(time, aggregated_acc_data)
+
+str(acc_with_time)
+p <- ggplot(data = acc_with_time, aes(x = time, y = V1, color = V2, size = V3))+geom_point()+theme_bw()
+
+ggplotly(p)
+
+
+
+
